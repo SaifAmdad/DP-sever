@@ -1,8 +1,4 @@
-# Project Title
-
-Dubai-Properties
-
-[![npm version](v22.17.0)]
+# Dubai Properties
 
 ## Installation
 
@@ -22,13 +18,13 @@ Before installing, ensure you have [Node.js](https://nodejs.org/) installed (Nod
     If it's a new project, you might need to create a `package.json` file first using `npm init`.
 
 3.  **create a .env file**
-    provide : 1. PORT 2. DB Link (Database link)
+    provide values what's mentioned in secret file.
 
 ## Usage
 
-Provide clear examples of how to use your project.
+CRUD on users and their contributions.
 
-### Command Line
+### Command Line to run server
 
 ```bash
 npm start

@@ -1,0 +1,43 @@
+const lillahModel = require("../models/lillahModel");
+
+const addLillah = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const userId = req.params.id;
+
+    const newLillah = {
+      userId,
+      amount,
+    };
+
+    const lillah = await lillahModel.create(newLillah);
+    res.status(200).send({
+      success: true,
+      message: "Lillah fund added seccessfully !",
+      payload: lillah,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const getLillah = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const allLillah = await lillahModel.find({ userId });
+    res.status(200).send({
+      success: true,
+      message: "All lillah funds were returned successfully !",
+      payload: allLillah,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+module.exports = { addLillah, getLillah };
