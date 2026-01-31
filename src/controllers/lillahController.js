@@ -1,9 +1,20 @@
 const lillahModel = require("../models/lillahModel");
+const userModel = require("../models/userModel");
 
 const addLillah = async (req, res) => {
   try {
     const { amount } = req.body;
     const userId = req.params.id;
+
+    // ---------------------
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found with this ID",
+      });
+    }
+    // -------------------------
 
     const newLillah = {
       userId,

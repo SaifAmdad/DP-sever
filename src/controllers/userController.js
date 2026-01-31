@@ -2,16 +2,21 @@ const userModel = require("../models/userModel");
 
 const createUser = async (req, res, next) => {
   try {
-    const { name, email, password, phone, nominees } = req.body;
+    const getInfo = req.body;
 
-    if (!name || !email || !password || !phone) {
+    if (
+      !getInfo.name ||
+      !getInfo.email ||
+      !getInfo.password ||
+      !getInfo.phone
+    ) {
       return res.status(500).send({
         success: false,
         message: "Full fill required feild",
       });
     }
 
-    const userExist = await userModel.exists({ email });
+    const userExist = await userModel.exists({ email: getInfo.email });
 
     if (userExist) {
       return res.status(500).send({
@@ -20,25 +25,18 @@ const createUser = async (req, res, next) => {
       });
     }
 
-    const phoneExist = await userModel.exists({ phone });
+    const phoneExist = await userModel.exists({ phone: getInfo.phone });
     if (phoneExist) {
       return res.status(500).send({
         success: false,
         message: "User already exist with this Phone Number",
       });
     }
-    const newUser = {
-      name,
-      email,
-      password,
-      phone,
-      nominees,
-    };
-    await userModel.create(newUser);
-    console.log("user created successfully!");
+    await userModel.create(getInfo);
     res.status(201).send({
       success: true,
-      payload: newUser,
+      message: "User was created successfully !",
+      payload: getInfo,
     });
   } catch (error) {
     console.log(error);
@@ -72,4 +70,60 @@ const getUsers = async (req, res) => {
   }
 };
 
-module.exports = { createUser, getUsers };
+// update user ===================================
+const updateUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const getInfo = req.body;
+    if (getInfo.email || getInfo.phone || getInfo.password) {
+      return res.send({
+        success: false,
+        message: "you cannot change email and phone",
+      });
+    }
+    const updateOptions = {
+      new: true,
+      runValidators: true,
+      context: "query",
+    };
+    let update = {};
+    const user = await userModel.findById(userId, { password: 0 });
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "user not found with this ID",
+      });
+    }
+
+    for (let key in getInfo) {
+      if (getInfo[key] === "") {
+        continue;
+      }
+      console.log(getInfo[key]);
+      update[key] = getInfo[key];
+    }
+
+    const userUpdate = await userModel
+      .findByIdAndUpdate(userId, update, updateOptions)
+      .select("-password");
+    console.log(userUpdate);
+    res.send({
+      success: true,
+      message: "update user",
+      payload: update,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Reset Password =======================================
+
+const resetPassword = async (req, res) => {
+  console.log("reset Password");
+};
+
+module.exports = { createUser, getUsers, updateUser, resetPassword };

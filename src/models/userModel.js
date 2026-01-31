@@ -1,13 +1,3 @@
-// const mongoose = require("mongoose");
-
-// const userSchema = new mongoose.Schema({
-//   name: {
-//     type: String,
-//     required: true,
-//     trim: true,
-//   },
-// });
-
 const { Schema, model } = require("mongoose");
 const bcrypt = require("bcryptjs");
 
@@ -63,23 +53,21 @@ const userSchema = Schema(
       type: Boolean,
       default: false,
     },
-    nominees: {
-      name: {
-        type: String,
-        // required: true,
-        default: "nominee name",
-        trim: true,
-      },
-      nid: {
-        type: String,
-        // required: true,
-        default: "nominee ID",
-      },
-      phone: {
-        type: String,
-        // required: true,
-        default: "Phone",
-      },
+    nomineeName: {
+      type: String,
+      // required: true,
+      default: "nominee name",
+      trim: true,
+    },
+    nomineeNid: {
+      type: String,
+      // required: true,
+      default: "nominee ID/BC",
+    },
+    nomineePhone: {
+      type: String,
+      // required: true,
+      default: "Phone",
     },
   },
   { timestamps: true },

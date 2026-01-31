@@ -1,9 +1,34 @@
+const emailWithNodemailer = require("../config/email");
 const contributionModel = require("../models/contributionModel");
+const userModel = require("../models/userModel");
 
 const addContribution = async (req, res, next) => {
   try {
+    const months = [
+      "One Time payment",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
     const { amount, month, year } = req.body;
     const userId = req.params.id;
+    const user = await userModel.findById(userId).select("-password");
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found with this ID",
+      });
+    }
 
     if (!amount || !month || !year) {
       return res.status(500).send({
@@ -16,13 +41,22 @@ const addContribution = async (req, res, next) => {
       year,
       month,
     });
-    console.log(isExist);
+
     if (isExist) {
       return res.status(500).send({
         success: false,
-        message: "Contribution already exist !",
+        message: "Contribution already exist in this month !",
       });
     }
+
+    const emailData = {
+      email: user.email,
+      subject: `[noReply] ${months[month]} - ${year} Contribution!`,
+      html: `
+      <h1>Hello Mr. ${user.name}</h1>
+      <p>Your <span style="color: blue; font-size: 16px; background-color: lightgray; padding:5px"> AED : ${amount} </span> for ${months[month]}-${year}has been added successfully ! </p>
+      `,
+    };
 
     const newContribution = {
       userId,
@@ -31,6 +65,7 @@ const addContribution = async (req, res, next) => {
       year,
     };
     await contributionModel.create(newContribution);
+    await emailWithNodemailer(emailData);
     res.status(200).send({
       success: true,
       message: "Contribution added successfully !",
@@ -70,4 +105,18 @@ const getContributions = async (req, res) => {
     console.log(error.message);
   }
 };
-module.exports = { addContribution, getContributions };
+
+// Get all contributions ====================
+
+const getAllContributions = async (req, res) => {
+  const allContributions = await contributionModel.find();
+  const contributionCount = await contributionModel.find().countDocuments();
+  res.status(200).send({
+    success: true,
+    message: `All ${contributionCount} contributions were returned successfully !`,
+    payload: allContributions,
+  });
+  console.log(allContributions);
+};
+
+module.exports = { addContribution, getContributions, getAllContributions };

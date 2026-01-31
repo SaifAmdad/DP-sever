@@ -18,6 +18,16 @@ const addFine = async (req, res) => {
         amount,
         type,
       };
+      // ---------------------
+
+      const user = await userModel.findById(userId);
+      if (!user) {
+        return res.status(404).send({
+          success: false,
+          message: "User not found with this ID",
+        });
+      }
+      // -------------------------
       console.log(bankInterestId);
       await fineModel.create(newBankInterest);
       return res.status(200).send({
