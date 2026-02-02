@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
 const emailWithNodemailer = async (emailData) => {
   try {
     const emailOption = {
-      from: smtpUserName, // sender address
+      from: `Dubai-Properties ${smtpUserName}`, // sender address
       to: emailData.email, // list of receivers
       subject: emailData.subject, // Subject line
       html: emailData.html, // html body

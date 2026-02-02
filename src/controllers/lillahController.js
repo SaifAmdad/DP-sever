@@ -1,3 +1,4 @@
+const emailWithNodemailer = require("../config/email");
 const lillahModel = require("../models/lillahModel");
 const userModel = require("../models/userModel");
 
@@ -21,7 +22,20 @@ const addLillah = async (req, res) => {
       amount,
     };
 
+    // ---------------------------
+
+    const emailData = {
+      email: user.email,
+      subject: `[noReply] Lillah-Fund !`,
+      html: `
+      <h1>Hello Mr. ${user.name}</h1>
+      <p>Your <span style="color: blue; font-weight:700; padding:5px"> AED : ${amount} </span> for <span style="color: blue; font-weight:700; padding:5px">Lillah-Fund </span>  has been added successfully ! </p>
+      `,
+    };
+    // ---------------------------
+
     const lillah = await lillahModel.create(newLillah);
+    await emailWithNodemailer(emailData);
     res.status(200).send({
       success: true,
       message: "Lillah fund added seccessfully !",

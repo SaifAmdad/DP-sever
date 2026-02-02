@@ -9,7 +9,7 @@ const timeLimitedJWT = (payload, secretKey, expiresIn) => {
     throw false;
   }
   try {
-    const token = jwt.sign(payload, secretKey, { expiresIn });
+    const token = jwt.sign({ payload }, secretKey, { expiresIn });
     return token;
   } catch (error) {
     console.error(error);
@@ -19,17 +19,17 @@ const timeLimitedJWT = (payload, secretKey, expiresIn) => {
 
 const jwtForLogin = (payload, secretKey) => {
   if (typeof payload !== "object" || !payload) {
-    return false;
+    return "Pass an object ";
   }
 
   if (typeof secretKey !== "string" || secretKey == "" || !secretKey) {
     throw false;
   }
   try {
-    const token = jwt.sign(payload, secretKey);
+    const token = jwt.sign({ payload }, secretKey);
     return token;
   } catch (error) {
-    console.error(error);
+    console.error("Jwt error");
     return error.message;
   }
 };

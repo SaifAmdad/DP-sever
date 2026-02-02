@@ -36,6 +36,14 @@ const addContribution = async (req, res, next) => {
         message: "Full fill required feild",
       });
     }
+
+    if (month >= 13 || month < 0) {
+      return res.status(500).send({
+        success: false,
+        message: "Month cannot be less then 0 or more then 12",
+      });
+    }
+
     const isExist = await contributionModel.findOne({
       userId,
       year,
@@ -54,7 +62,7 @@ const addContribution = async (req, res, next) => {
       subject: `[noReply] ${months[month]} - ${year} Contribution!`,
       html: `
       <h1>Hello Mr. ${user.name}</h1>
-      <p>Your <span style="color: blue; font-size: 16px; background-color: lightgray; padding:5px"> AED : ${amount} </span> for ${months[month]}-${year}has been added successfully ! </p>
+      <p>Your <span style="color: blue; font-weight:700; background-color: lightgray; padding:5px"> AED : ${amount} </span> for ${months[month]}-${year} has been added successfully ! </p>
       `,
     };
 
@@ -65,7 +73,7 @@ const addContribution = async (req, res, next) => {
       year,
     };
     await contributionModel.create(newContribution);
-    await emailWithNodemailer(emailData);
+    // await emailWithNodemailer(emailData);
     res.status(200).send({
       success: true,
       message: "Contribution added successfully !",

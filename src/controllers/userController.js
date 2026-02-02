@@ -1,4 +1,7 @@
+const { jwtForLogin } = require("../config/jwt");
 const userModel = require("../models/userModel");
+const bcrypt = require("bcryptjs");
+const { jwtLoginKey } = require("../secret");
 
 const createUser = async (req, res, next) => {
   try {
@@ -40,6 +43,46 @@ const createUser = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
+  }
+};
+
+// user Login =============================
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(404).send({
+        success: false,
+        message: "Full-fill credentials",
+      });
+    }
+
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Invalid credentialS",
+      });
+    }
+    const userAuth = await bcrypt.compare(password, user.password);
+    if (!userAuth) {
+      return res.status(404).send({
+        success: false,
+        message: "Invalid credentialS",
+      });
+    }
+    const authToken = jwtForLogin(user, jwtLoginKey);
+
+    res.status(200).send({
+      success: true,
+      message: "Logedin successfully !",
+      payload: authToken,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -126,4 +169,22 @@ const resetPassword = async (req, res) => {
   console.log("reset Password");
 };
 
-module.exports = { createUser, getUsers, updateUser, resetPassword };
+// confirm Reset password -------
+const confirmResetPassword = async (req, res) => {
+  console.log("confirm reset password");
+};
+
+// Change Password =======================================
+
+const changePassword = async (req, res) => {
+  console.log("reset Password");
+};
+
+module.exports = {
+  createUser,
+  getUsers,
+  updateUser,
+  resetPassword,
+  loginUser,
+  changePassword,
+};
