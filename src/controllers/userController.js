@@ -1,7 +1,8 @@
-const { jwtForLogin } = require("../config/jwt");
+const { jwtForLogin, timeLimitedJWT } = require("../config/jwt");
 const userModel = require("../models/userModel");
 const bcrypt = require("bcryptjs");
-const { jwtLoginKey } = require("../secret");
+const jwt = require("jsonwebtoken");
+const { jwtLoginKey, jwtResetPasswordKey } = require("../secret");
 
 const createUser = async (req, res, next) => {
   try {
@@ -58,6 +59,7 @@ const loginUser = async (req, res) => {
     }
 
     const user = await userModel.findOne({ email });
+
     if (!user) {
       return res.status(404).send({
         success: false,
@@ -91,15 +93,14 @@ const loginUser = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     const search = req.query.search || "";
-    const limit = 5;
+    const limit = 50;
     const options = { password: 0 };
-    console.log(options);
-    const allUsers = await userModel.find({}, options).limit(limit);
+    const allUsers = await userModel.find();
     const usersCount = await userModel
       .find({}, options)
       .limit(limit)
       .countDocuments();
-    console.log(usersCount);
+
     res.status(200).send({
       success: true,
       message: `All ${usersCount} users returned successfully !`,
@@ -113,10 +114,71 @@ const getUsers = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    const user = req.user;
+    res.status(200).send({
+      seccess: true,
+      message: "Profile returned successfully !",
+      payload: user,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// update user by ID ===================================
+const updateUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const getInfo = req.body;
+
+    const updateOptions = {
+      new: true,
+      runValidators: true,
+      context: "query",
+    };
+    let update = {};
+    const user = await userModel.findById(userId, { password: 0 });
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "user not found with this ID",
+      });
+    }
+
+    for (let key in getInfo) {
+      if (getInfo[key] === "") {
+        continue;
+      }
+      console.log(getInfo[key]);
+      update[key] = getInfo[key];
+    }
+
+    const userUpdate = await userModel
+      .findByIdAndUpdate(userId, update, updateOptions)
+      .select("-password");
+    console.log(userUpdate);
+    res.send({
+      success: true,
+      message: "update user",
+      payload: update,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // update user ===================================
 const updateUser = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const userId = req.header("token");
     const getInfo = req.body;
     if (getInfo.email || getInfo.phone || getInfo.password) {
       return res.send({
@@ -162,29 +224,127 @@ const updateUser = async (req, res) => {
     });
   }
 };
-
 // Reset Password =======================================
 
 const resetPassword = async (req, res) => {
-  console.log("reset Password");
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(500).send({
+        success: false,
+        message: "Enter credential!",
+      });
+    }
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(500).send({
+        success: false,
+        message: "User not found with this Email!",
+      });
+    }
+
+    const token = timeLimitedJWT(user, jwtResetPasswordKey, "10m");
+    res.status(200).send({
+      success: true,
+      message: "token has been sent successfully. valid for 10 minutes",
+      payload: token,
+    });
+  } catch (error) {
+    console.log(error.message);
+  }
 };
 
 // confirm Reset password -------
 const confirmResetPassword = async (req, res) => {
-  console.log("confirm reset password");
+  try {
+    const token = req.params.token;
+    const { newPassword } = req.body;
+
+    const updateOptions = {
+      new: true,
+      runValidators: true,
+    };
+
+    const updates = {};
+
+    const decoded = jwt.verify(token, jwtResetPasswordKey);
+    if (!decoded) {
+      return res.status(404).send({
+        success: false,
+        message: "User token cannot decoded!",
+      });
+    }
+    updates.password = newPassword;
+    console.log(decoded.payload._id);
+    const updatedPassword = await userModel
+      .findByIdAndUpdate(decoded.payload._id, updates, updateOptions)
+      .select("-password -isAdmin");
+    res.status(200).send({
+      success: true,
+      message: "Password updated successfully !",
+      payload: updatedPassword,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 // Change Password =======================================
 
 const changePassword = async (req, res) => {
-  console.log("reset Password");
+  try {
+    const token = req.header("token");
+    const { newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(500).send({
+        success: false,
+        message: "Full-fill your credentials",
+      });
+    }
+
+    const updateOptions = {
+      new: true,
+      runValidators: true,
+    };
+
+    const updates = {};
+
+    const decoded = jwt.verify(token, jwtLoginKey);
+    if (!decoded) {
+      return res.status(404).send({
+        success: false,
+        message: "User token cannot decoded!",
+      });
+    }
+    updateUser.password = newPassword;
+    const updatedPassword = await userModel
+      .findByIdAndUpdate(decoded.payload._id, updates, updateOptions)
+      .select("-password -isAdmin");
+
+    res.status(200).send({
+      success: true,
+      message: "Password updated successfully !",
+      payload: updatedPassword,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 module.exports = {
   createUser,
   getUsers,
+  getProfile,
+  updateUserById,
   updateUser,
   resetPassword,
   loginUser,
   changePassword,
+  confirmResetPassword,
 };
