@@ -52,6 +52,23 @@ const addFine = async (req, res) => {
   }
 };
 
+const getAllFines = async (req, res) => {
+  try {
+    const allFines = await fineModel.find();
+
+    res.status(500).send({
+      success: true,
+      message: "Donation updated successfully !",
+      payload: allFines,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 const getFines = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -77,4 +94,57 @@ const getFines = async (req, res) => {
   }
 };
 
-module.exports = { addFine, getFines };
+const updatedFine = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const getInfo = req.body;
+    const updateOptions = {
+      new: true,
+      runValidatiors: true,
+    };
+
+    const updates = {};
+
+    for (const key in getInfo) {
+      if (getInfo[key] === "") {
+        continue;
+      }
+      updates[key] = getInfo[key];
+    }
+    const updatedExpense = await fineModel.findByIdAndUpdate(
+      id,
+      updates,
+      updateOptions,
+    );
+
+    res.status(500).send({
+      success: true,
+      message: "Fine updated successfully !",
+      payload: updatedExpense,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const deleteFine = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleted = await fineModel.findByIdAndDelete(id);
+    res.status(200).send({
+      success: true,
+      message: "Fine deleted successfully !",
+      payload: deleted,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = { addFine, getFines, getAllFines, updatedFine, deleteFine };

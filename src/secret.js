@@ -9,6 +9,10 @@ const smtpPassword = process.env.SMTP_PASSWORD;
 const jwtLoginKey = process.env.JWT_LOGIN_KEY;
 const jwtResetPasswordKey = process.env.JWT_RESTPASWORD_KEY;
 
+const cloudinaryApi = process.env.CLOUDINARY_API;
+const cloudinaryName = process.env.CLOUDINARY_NAME;
+const cloudinarySecretKey = process.env.CLOUDINARY_CECRET_KEY;
+
 module.exports = {
   port,
   dbLink,
@@ -17,4 +21,8 @@ module.exports = {
   smtpPassword,
   jwtLoginKey,
   jwtResetPasswordKey,
+
+  cloudinaryName,
+  cloudinaryApi,
+  cloudinarySecretKey,
 };

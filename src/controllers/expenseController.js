@@ -200,4 +200,13 @@ const deleteDonation = async (req, res) => {
   }
 };
 
-module.exports = { createExpense, updateExpense, getExpense, createDonation };
+module.exports = {
+  createExpense,
+  updateExpense,
+  deleteExpense,
+  getExpense,
+  createDonation,
+  getDonation,
+  updateDonation,
+  deleteDonation,
+};

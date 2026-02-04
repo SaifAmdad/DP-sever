@@ -127,4 +127,62 @@ const getAllContributions = async (req, res) => {
   console.log(allContributions);
 };
 
-module.exports = { addContribution, getContributions, getAllContributions };
+const updateContribution = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const getInfo = req.body;
+    const updateOptions = {
+      new: true,
+      runValidatiors: true,
+    };
+
+    const updates = {};
+
+    for (const key in getInfo) {
+      if (getInfo[key] === "") {
+        continue;
+      }
+      updates[key] = getInfo[key];
+    }
+    const updatedContribution = await contributionModel.findByIdAndUpdate(
+      id,
+      updates,
+      updateOptions,
+    );
+
+    res.status(500).send({
+      success: true,
+      message: "Contribution updated successfully !",
+      payload: updatedContribution,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const deleteContribution = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleted = await contributionModel.findByIdAndDelete(id);
+    res.status(200).send({
+      success: true,
+      message: "contribution deleted successfully !",
+      payload: deleted,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+module.exports = {
+  addContribution,
+  getContributions,
+  getAllContributions,
+  updateContribution,
+  deleteContribution,
+};

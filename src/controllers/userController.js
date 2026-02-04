@@ -3,10 +3,13 @@ const userModel = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { jwtLoginKey, jwtResetPasswordKey } = require("../secret");
+const cloudinary = require("../config/cloudinary");
+const { imgPublicId } = require("../helper/cloudinaryHelper");
 
 const createUser = async (req, res, next) => {
   try {
     const getInfo = req.body;
+    const image = req.file?.path;
 
     if (
       !getInfo.name ||
@@ -35,6 +38,13 @@ const createUser = async (req, res, next) => {
         success: false,
         message: "User already exist with this Phone Number",
       });
+    }
+
+    if (image) {
+      const response = await cloudinary.uploader.upload(image, {
+        folder: "Dubai-Properties/users",
+      });
+      getInfo.image = response.secure_url;
     }
     await userModel.create(getInfo);
     res.status(201).send({
@@ -337,6 +347,38 @@ const changePassword = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const existUser = await userModel.findById(id);
+    if (!existUser) {
+      return res.status(404).send({
+        success: false,
+        message: "user not found with this id",
+      });
+    }
+    if (existUser.image !== "public/img/user/default.svg") {
+      console.log(existUser.image);
+      const publicID = await imgPublicId(existUser.image);
+      const respo = await cloudinary.uploader.destroy(
+        `Dubai-Properties/users/${publicID}`,
+      );
+      console.log(respo);
+    }
+    const deleted = await userModel.findByIdAndDelete(id);
+    res.status(200).send({
+      success: true,
+      message: "User deleted successfully !",
+      payload: deleted,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createUser,
   getUsers,
@@ -347,4 +389,5 @@ module.exports = {
   loginUser,
   changePassword,
   confirmResetPassword,
+  deleteUser,
 };
