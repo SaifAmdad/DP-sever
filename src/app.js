@@ -3,6 +3,7 @@ const userRouter = require("./routers/userRouter");
 const contributionRouter = require("./routers/contributionRouter");
 const { fineRouter, bankInterestRouter } = require("./routers/fineRouter");
 const lillahRouter = require("./routers/lillahRouter");
+const expenseRouter = require("./routers/expenseRouter");
 const app = express();
 
 app.use(express.json());
@@ -22,5 +23,6 @@ app.use("/api", contributionRouter);
 app.use("/api", fineRouter);
 app.use("/api", bankInterestRouter);
 app.use("/api", lillahRouter);
+app.use("/api", expenseRouter);
 
 module.exports = app;

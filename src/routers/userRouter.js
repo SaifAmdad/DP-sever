@@ -17,7 +17,7 @@ const userRouter = express.Router();
 userRouter.post("/create-user", isLogedin, createUser);
 userRouter.get("/get-users", isLogedin, isAdmin, getUsers);
 userRouter.get("/get-profile", isLogedin, getProfile);
-userRouter.put("/update-user/:id", updateUserById);
+userRouter.put("/update-user-by-id/:id", isLogedin, isAdmin, updateUserById);
 userRouter.put("/update-user", isLogedin, updateUser);
 userRouter.post("/login", isLogedOut, loginUser);
 userRouter.post("/reset-password", resetPassword);

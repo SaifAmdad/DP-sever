@@ -178,7 +178,7 @@ const updateUserById = async (req, res) => {
 // update user ===================================
 const updateUser = async (req, res) => {
   try {
-    const userId = req.header("token");
+    const userId = req.user;
     const getInfo = req.body;
     if (getInfo.email || getInfo.phone || getInfo.password) {
       return res.send({

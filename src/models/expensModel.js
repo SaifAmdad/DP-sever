@@ -6,6 +6,27 @@ const expenseSchema = Schema(
       type: String,
       required: true,
     },
+    year: {
+      type: Number,
+      required: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+    },
+  },
+  { timestamps: true },
+);
+const donationSchema = Schema(
+  {
+    details: {
+      type: String,
+      required: true,
+    },
+    year: {
+      type: Number,
+      required: true,
+    },
     amount: {
       type: Number,
       required: true,
@@ -15,4 +36,5 @@ const expenseSchema = Schema(
 );
 
 const expenseModel = model("Expense", expenseSchema);
-module.exports = expenseModel;
+const donationModel = model("Donation", donationSchema);
+module.exports = { expenseModel, donationModel };

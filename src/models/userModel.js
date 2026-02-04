@@ -36,6 +36,7 @@ const userSchema = Schema(
     nid: {
       type: String,
       // required: true,
+      default: "this is default",
     },
     image: {
       type: String,
@@ -44,10 +45,12 @@ const userSchema = Schema(
     address: {
       type: String,
       // required: true,
+      default: "this is default",
     },
     presentAddress: {
       type: String,
       // required: true,
+      default: "this is default",
     },
     isAdmin: {
       type: Boolean,
