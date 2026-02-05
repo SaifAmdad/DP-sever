@@ -202,7 +202,8 @@ const updateUser = async (req, res) => {
       context: "query",
     };
     let update = {};
-    const user = await userModel.findById(userId, { password: 0 });
+    const user = await userModel.findById(userId._id, { password: 0 });
+
     if (!user) {
       return res.status(404).send({
         success: false,
@@ -214,14 +215,12 @@ const updateUser = async (req, res) => {
       if (getInfo[key] === "") {
         continue;
       }
-      console.log(getInfo[key]);
       update[key] = getInfo[key];
     }
 
     const userUpdate = await userModel
       .findByIdAndUpdate(userId, update, updateOptions)
       .select("-password");
-    console.log(userUpdate);
     res.send({
       success: true,
       message: "update user",
@@ -360,10 +359,7 @@ const deleteUser = async (req, res) => {
     if (existUser.image !== "public/img/user/default.svg") {
       console.log(existUser.image);
       const publicID = await imgPublicId(existUser.image);
-      const respo = await cloudinary.uploader.destroy(
-        `Dubai-Properties/users/${publicID}`,
-      );
-      console.log(respo);
+      await cloudinary.uploader.destroy(`Dubai-Properties/users/${publicID}`);
     }
     const deleted = await userModel.findByIdAndDelete(id);
     res.status(200).send({
