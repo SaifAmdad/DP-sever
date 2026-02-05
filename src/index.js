@@ -3,6 +3,10 @@ const connectDB = require("./config/db");
 const app = require("./app");
 
 app.listen(port, async () => {
-  console.log(`Server is running at http://localhost:${port}`);
-  await connectDB();
+  try {
+    await connectDB();
+    console.log(`Server is running at http://localhost:${port}`);
+  } catch (error) {
+    console.log("Failed to start server : ", error);
+  }
 });

@@ -27,6 +27,7 @@ const userSchema = Schema(
       type: String,
       required: true,
       set: (v) => bcrypt.hashSync(v, bcrypt.genSaltSync(13)),
+      select: false,
     },
     phone: {
       type: String,

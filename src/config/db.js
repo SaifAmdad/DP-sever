@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 const { dbLink } = require("../secret");
 
-const connectDB = () => {
+const connectDB = async () => {
   try {
-    mongoose.connect(dbLink);
+    await mongoose.connect(dbLink);
     console.log(`DB connected successfully!`);
   } catch (error) {
     console.log(`DB couldn't connect ! `);

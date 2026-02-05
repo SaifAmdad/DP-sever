@@ -10,3 +10,5 @@ bankInterestRouter.post("/add-bank-interest", isLogedin, isAdmin, addFine);
 bankInterestRouter.get("/get-bank-interest", isLogedin, getFines);
 
 module.exports = { fineRouter, bankInterestRouter };
+
+// it should be updated

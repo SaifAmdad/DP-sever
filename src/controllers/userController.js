@@ -5,6 +5,8 @@ const jwt = require("jsonwebtoken");
 const { jwtLoginKey, jwtResetPasswordKey } = require("../secret");
 const cloudinary = require("../config/cloudinary");
 const { imgPublicId } = require("../helper/cloudinaryHelper");
+const createError = require("http-errors");
+const { successResponse } = require("./response");
 
 const createUser = async (req, res, next) => {
   try {
@@ -17,7 +19,7 @@ const createUser = async (req, res, next) => {
       !getInfo.password ||
       !getInfo.phone
     ) {
-      return res.status(500).send({
+      return res.status(400).send({
         success: false,
         message: "Full fill required feild",
       });
@@ -46,14 +48,17 @@ const createUser = async (req, res, next) => {
       });
       getInfo.image = response.secure_url;
     }
-    await userModel.create(getInfo);
+    const user = await userModel.create(getInfo);
+    const createdUser = await userModel
+      .findById(user._id)
+      .select("-password -isAdmin");
     res.status(201).send({
       success: true,
       message: "User was created successfully !",
-      payload: getInfo,
+      payload: createdUser,
     });
   } catch (error) {
-    console.log(error);
+    return next(error);
   }
 };
 
@@ -62,39 +67,27 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(404).send({
-        success: false,
-        message: "Full-fill credentials",
-      });
+      return next(createError(400, "Fill all credentials"));
     }
 
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email }).select("+password");
 
     if (!user) {
-      return res.status(404).send({
-        success: false,
-        message: "Invalid credentialS",
-      });
+      return next(createError(401, "Invalid credentials"));
     }
     const userAuth = await bcrypt.compare(password, user.password);
     if (!userAuth) {
-      return res.status(404).send({
-        success: false,
-        message: "Invalid credentialS",
-      });
+      return next(createError(401, "Invalid credentials"));
     }
     const authToken = jwtForLogin(user, jwtLoginKey);
 
-    res.status(200).send({
+    res.status(200).json({
       success: true,
       message: "Logedin successfully !",
       payload: authToken,
     });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
@@ -102,41 +95,41 @@ const loginUser = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
-    const search = req.query.search || "";
-    const limit = 50;
-    const options = { password: 0 };
-    const allUsers = await userModel.find();
-    const usersCount = await userModel
-      .find({}, options)
-      .limit(limit)
-      .countDocuments();
+    const search = (req.query.search || "").trim();
+    const filter = search
+      ? {
+          $or: [
+            { name: new RegExp(search, "i") },
+            { email: new RegExp(search, "i") },
+            { phone: new RegExp(search, "i") },
+          ],
+        }
+      : {};
 
-    res.status(200).send({
+    const options = { password: 0 };
+    const allUsers = await userModel.find(filter, options);
+    const usersCount = await userModel.find(filter, options).countDocuments();
+
+    res.status(200).json({
       success: true,
       message: `All ${usersCount} users returned successfully !`,
       payload: allUsers,
     });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
 const getProfile = async (req, res) => {
   try {
     const user = req.user;
-    res.status(200).send({
+    res.status(200).json({
       seccess: true,
       message: "Profile returned successfully !",
       payload: user,
     });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
@@ -168,20 +161,16 @@ const updateUserById = async (req, res) => {
       update[key] = getInfo[key];
     }
 
-    const userUpdate = await userModel
-      .findByIdAndUpdate(userId, update, updateOptions)
-      .select("-password");
-    console.log(userUpdate);
-    res.send({
+    await userModel.findByIdAndUpdate(userId, update, updateOptions);
+
+    const updatedUser = await userModel.findById(user._id).select("-password");
+    res.status(200).json({
       success: true,
       message: "update user",
-      payload: update,
+      payload: updatedUser,
     });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
@@ -218,19 +207,15 @@ const updateUser = async (req, res) => {
       update[key] = getInfo[key];
     }
 
-    const userUpdate = await userModel
-      .findByIdAndUpdate(userId, update, updateOptions)
-      .select("-password");
-    res.send({
+    await userModel.findByIdAndUpdate(userId, update, updateOptions);
+    const updatedUser = await userModel.findById(user._id).select("-password");
+    res.status(200).send({
       success: true,
       message: "update user",
-      payload: update,
+      payload: updatedUser,
     });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 // Reset Password =======================================
@@ -239,27 +224,21 @@ const resetPassword = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
-      return res.status(500).send({
-        success: false,
-        message: "Enter credential!",
-      });
+      return next(createError(400, "Email is required"));
     }
     const user = await userModel.findOne({ email });
     if (!user) {
-      return res.status(500).send({
-        success: false,
-        message: "User not found with this Email!",
-      });
+      return next(createError(404, "User not found"));
     }
 
     const token = timeLimitedJWT(user, jwtResetPasswordKey, "10m");
-    res.status(200).send({
+    res.status(200).json({
       success: true,
       message: "token has been sent successfully. valid for 10 minutes",
       payload: token,
     });
   } catch (error) {
-    console.log(error.message);
+    next(error);
   }
 };
 
@@ -268,6 +247,10 @@ const confirmResetPassword = async (req, res) => {
   try {
     const token = req.params.token;
     const { newPassword } = req.body;
+
+    if (!newPassword) {
+      return next(createError(400, "New Password required"));
+    }
 
     const updateOptions = {
       new: true,
@@ -278,26 +261,19 @@ const confirmResetPassword = async (req, res) => {
 
     const decoded = jwt.verify(token, jwtResetPasswordKey);
     if (!decoded) {
-      return res.status(404).send({
-        success: false,
-        message: "User token cannot decoded!",
-      });
+      return next(createError(401, "Invalid token"));
     }
     updates.password = newPassword;
-    console.log(decoded.payload._id);
-    const updatedPassword = await userModel
+    await userModel
       .findByIdAndUpdate(decoded.payload._id, updates, updateOptions)
       .select("-password -isAdmin");
-    res.status(200).send({
+    res.status(200).json({
       success: true,
       message: "Password updated successfully !",
-      payload: updatedPassword,
+      payload: {},
     });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -305,13 +281,10 @@ const confirmResetPassword = async (req, res) => {
 
 const changePassword = async (req, res) => {
   try {
-    const token = req.header("token");
-    const { newPassword } = req.body;
+    const user = req.user;
+    const { oldPassword, newPassword } = req.body;
     if (!token || !newPassword) {
-      return res.status(500).send({
-        success: false,
-        message: "Full-fill your credentials",
-      });
+      return next(createError(400, "New password required"));
     }
 
     const updateOptions = {
@@ -321,28 +294,18 @@ const changePassword = async (req, res) => {
 
     const updates = {};
 
-    const decoded = jwt.verify(token, jwtLoginKey);
-    if (!decoded) {
-      return res.status(404).send({
-        success: false,
-        message: "User token cannot decoded!",
-      });
-    }
-    updateUser.password = newPassword;
-    const updatedPassword = await userModel
-      .findByIdAndUpdate(decoded.payload._id, updates, updateOptions)
+    updates.password = newPassword;
+    await userModel
+      .findByIdAndUpdate(user._id, updates, updateOptions)
       .select("-password -isAdmin");
 
     res.status(200).send({
       success: true,
       message: "Password updated successfully !",
-      payload: updatedPassword,
+      payload: {},
     });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
