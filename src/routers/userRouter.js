@@ -26,7 +26,7 @@ userRouter.post(
 userRouter.get("/get-users", isLogedin, isAdmin, getUsers);
 userRouter.get("/get-profile", isLogedin, getProfile);
 userRouter.put("/update-user-by-id/:id", isLogedin, isAdmin, updateUserById);
-userRouter.delete("/delete-user-by-id/:id", deleteUser);
+userRouter.delete("/delete-user-by-id/:id", isLogedin, isAdmin, deleteUser);
 userRouter.put("/update-user", isLogedin, updateUser);
 userRouter.post("/login", isLogedOut, loginUser);
 userRouter.post("/reset-password", resetPassword);

@@ -1,4 +1,4 @@
-const fineModel = require("../models/fineModel");
+const { fineModel } = require("../models/fineModel");
 const userModel = require("../models/userModel");
 const { bankInterestId } = require("../secret");
 
@@ -6,26 +6,13 @@ const addFine = async (req, res) => {
   try {
     let userId = req.params.id;
     const { amount, type } = req.body;
-    if (!amount || !type) {
-      return res.status(500).send({
+    if (!amount) {
+      return res.status(400).send({
         success: false,
         message: "Please full fill requierment",
       });
     }
-    if (!userId) {
-      const newBankInterest = {
-        userId: bankInterestId,
-        amount,
-        type,
-      };
 
-      console.log(bankInterestId);
-      await fineModel.create(newBankInterest);
-      return res.status(200).send({
-        success: true,
-        message: "Bank interest has been added successfully!",
-      });
-    }
     const user = await userModel.findOne({ _id: userId });
     if (!user) {
       return res.status(404).send({
@@ -55,10 +42,10 @@ const addFine = async (req, res) => {
 const getAllFines = async (req, res) => {
   try {
     const allFines = await fineModel.find();
-
-    res.status(500).send({
+    const count = await fineModel.find().countDocuments();
+    res.status(200).send({
       success: true,
-      message: "Donation updated successfully !",
+      message: `All ${count} fine were returned successfully !`,
       payload: allFines,
     });
   } catch (error) {
@@ -72,18 +59,11 @@ const getAllFines = async (req, res) => {
 const getFines = async (req, res) => {
   try {
     const userId = req.params.id;
-    if (!userId) {
-      const allFine = await fineModel.fine({ userId: bankInterestId });
-      return res.status(200).send({
-        success: true,
-        message: "Bank interest were retured successfully !",
-        payload: allFine,
-      });
-    }
-    const allFine = await fineModel.fine({ userId });
+    const allFine = await fineModel.find({ userId });
+    const count = await fineModel.find({ userId }).countDocuments();
     res.status(200).send({
       success: true,
-      message: "Fines retured successfully !",
+      message: `${count} Fines were retured successfully !`,
       payload: allFine,
     });
   } catch (error) {
@@ -117,7 +97,7 @@ const updatedFine = async (req, res) => {
       updateOptions,
     );
 
-    res.status(500).send({
+    res.status(200).send({
       success: true,
       message: "Fine updated successfully !",
       payload: updatedExpense,

@@ -32,9 +32,10 @@ const createExpense = async (req, res) => {
 const getExpense = async (req, res) => {
   try {
     const expenses = await expenseModel.find();
+    const expensesCount = await expenseModel.find().countDocuments();
     res.status(200).send({
       success: true,
-      message: "Expenses were returned successfully !",
+      message: `${expensesCount} Expenses were returned successfully !`,
       payload: expenses,
     });
   } catch (error) {

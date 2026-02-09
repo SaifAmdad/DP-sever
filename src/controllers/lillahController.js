@@ -53,9 +53,10 @@ const getLillah = async (req, res) => {
   try {
     const userId = req.params.id;
     const allLillah = await lillahModel.find({ userId });
+    const count = await lillahModel.find({ userId }).countDocuments();
     res.status(200).send({
       success: true,
-      message: "All lillah funds were returned successfully !",
+      message: `${count} lillah funds were returned successfully !`,
       payload: allLillah,
     });
   } catch (error) {
@@ -69,10 +70,11 @@ const getLillah = async (req, res) => {
 const getAllLillah = async (req, res) => {
   try {
     const allLillah = await lillahModel.find();
+    const count = await lillahModel.find().countDocuments();
 
-    res.status(500).send({
+    res.status(200).send({
       success: true,
-      message: "All Lillah were returned successfully !",
+      message: `All ${count} Lillah were returned successfully !`,
       payload: allLillah,
     });
   } catch (error) {

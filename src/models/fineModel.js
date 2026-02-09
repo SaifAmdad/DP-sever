@@ -13,10 +13,24 @@ const fineShema = Schema(
     },
     type: {
       type: String,
+      default: "Fine",
+    },
+  },
+  { timestamps: true },
+);
+const bankInterestShema = Schema(
+  {
+    amount: {
+      type: Number,
       required: true,
+    },
+    type: {
+      type: String,
+      default: "Bank interest",
     },
   },
   { timestamps: true },
 );
 const fineModel = model("Fine", fineShema);
-module.exports = fineModel;
+const bankInterestModel = model("BankInterest", bankInterestShema);
+module.exports = { fineModel, bankInterestModel };
