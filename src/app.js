@@ -27,6 +27,7 @@ app.get("/", (req, res) => {
   });
 });
 // ----------
+require("./helper/corn");
 
 app.use("/api", userRouter);
 app.use("/api", contributionRouter);

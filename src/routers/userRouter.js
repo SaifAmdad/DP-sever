@@ -14,6 +14,7 @@ const {
 const seedUser = require("../controllers/seedController");
 const { isLogedOut, isLogedin, isAdmin } = require("../middlewares/auth");
 const userUpload = require("../middlewares/fileUpload");
+const { sendNotification } = require("../controllers/posts");
 const userRouter = express.Router();
 
 userRouter.post(
@@ -33,4 +34,5 @@ userRouter.post("/reset-password", resetPassword);
 userRouter.post("/confirm-reset-password/:token", confirmResetPassword);
 userRouter.post("/change-password", isLogedin, changePassword);
 userRouter.get("/seed", seedUser);
+userRouter.get("/test", sendNotification);
 module.exports = userRouter;
